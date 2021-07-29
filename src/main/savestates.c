@@ -2190,3 +2190,15 @@ void savestates_deinit(void)
     SDL_DestroyMutex(savestates_lock);
     savestates_clear_job();
 }
+
+extern void refresh_dynarec(void)
+{
+    SDL_LockMutex(savestates_lock);
+
+    struct device* dev = &g_dev;
+    uint32_t pc = *r4300_pc(&dev->r4300);
+    update_x86_rounding_mode(&dev->r4300.cp1);
+    savestates_load_set_pc(&dev->r4300, pc);
+
+    SDL_UnlockMutex(savestates_lock);
+} 

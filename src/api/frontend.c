@@ -193,6 +193,7 @@ EXPORT m64p_error CALL CoreDoCommand(m64p_command Command, int ParamInt, void *P
             if (g_EmulatorRunning || !l_ROMOpen)
                 return M64ERR_INVALID_STATE;
             l_ROMOpen = 0;
+            reset_current_frame();
             cheat_delete_all(&g_cheat_ctx);
             cheat_uninit(&g_cheat_ctx);
             return close_rom();
@@ -432,4 +433,31 @@ EXPORT m64p_error CALL CoreGetRomSettings(m64p_rom_settings *RomSettings, int Ro
     return M64ERR_SUCCESS;
 }
 
+// #########################################################
+// ## Save Path Override
+// #########################################################
 
+EXPORT m64p_error CALL CoreSaveOverride(const char* path)
+{
+    l_save_override_dir = path;
+    return M64ERR_SUCCESS;
+}
+
+// #########################################################
+// ## Memory Info
+// #########################################################
+
+#include "main/rom.h"
+EXPORT void* CALL GetHeader() { return (void*)&ROM_HEADER; }
+
+EXPORT void* CALL GetRdRam() { return (void*)g_dev.rdram.dram; }
+EXPORT void* CALL GetRom() { return (void*)mem_base_u32(g_mem_base, MM_CART_ROM); }
+
+EXPORT const size_t CALL GetRdRamSize() { return g_dev.rdram.dram_size; }
+EXPORT const size_t CALL GetRomSize() { return g_dev.cart.cart_rom.rom_size; }
+
+// #########################################################
+// ## Hacking function
+// #########################################################
+
+EXPORT void CALL RefreshDynarec(void) { refresh_dynarec(); } 

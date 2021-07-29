@@ -8718,10 +8718,8 @@ void new_dynarec_init(void)
   using_tlb=0;
   for(n=0;n<524288;n++) // 0 .. 0x7FFFFFFF
     g_dev.r4300.new_dynarec_hot_state.memory_map[n]=(uintptr_t)-1;
-  for(n=524288;n<526336;n++) // 0x80000000 .. 0x807FFFFF
+  for(n=524288;n<1048576;n++) // 0x80000000 .. 0xFFFFFFFF
     g_dev.r4300.new_dynarec_hot_state.memory_map[n]=((uintptr_t)g_dev.rdram.dram-(uintptr_t)0x80000000)>>2;
-  for(n=526336;n<1048576;n++) // 0x80800000 .. 0xFFFFFFFF
-    g_dev.r4300.new_dynarec_hot_state.memory_map[n]=(uintptr_t)-1;
 
   tlb_speed_hacks();
   arch_init();

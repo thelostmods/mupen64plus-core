@@ -53,6 +53,8 @@ extern m64p_media_loader g_media_loader;
 
 extern m64p_frame_callback g_FrameCallback;
 
+extern const char* l_save_override_dir;
+
 extern int g_gs_vi_counter;
 
 const char* get_savestatepath(void);
@@ -98,6 +100,7 @@ m64p_error main_volume_mute(void);
 int        main_volume_get_muted(void);
 
 m64p_error main_reset(int do_hard_reset);
+m64p_error reset_current_frame(void);
 
 m64p_error open_pif(const unsigned char* pifimage, unsigned int size);
 

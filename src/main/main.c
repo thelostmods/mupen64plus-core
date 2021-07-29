@@ -116,6 +116,8 @@ m64p_media_loader g_media_loader;
 
 int g_gs_vi_counter = 0;
 
+const char* l_save_override_dir = NULL;
+
 /** static (local) variables **/
 static int   l_CurrentFrame = 0;         // frame counter
 static int   l_TakeScreenshot = 0;       // Tell OSD Rendering callback to take a screenshot just before drawing the OSD
@@ -276,6 +278,8 @@ const char *get_savestatepath(void)
 
 const char *get_savesrampath(void)
 {
+    if (l_save_override_dir != NULL) return l_save_override_dir;
+
     /* try to get the SaveSRAMPath string variable in the Core configuration section */
     return get_savepathdefault(ConfigGetParamString(g_CoreConfig, "SaveSRAMPath"));
 }
@@ -799,6 +803,11 @@ m64p_error main_reset(int do_hard_reset)
         soft_reset_device(&g_dev);
     }
 
+    return reset_current_frame();
+}
+
+m64p_error reset_current_frame(void) {
+    l_CurrentFrame = 0;
     return M64ERR_SUCCESS;
 }
 
@@ -1484,8 +1493,9 @@ m64p_error main_run(void)
     else
         disable_extra_mem = ConfigGetParamInt(g_CoreConfig, "DisableExtraMem");
 
-
-    rdram_size = (disable_extra_mem == 0) ? 0x800000 : 0x400000;
+    if (disable_extra_mem == 0) rdram_size = RDRAM_MAX_SIZE;
+    else if (disable_extra_mem == 1) rdram_size = 0x800000;
+    else rdram_size = 0x400000;
 
     if (count_per_op <= 0)
         count_per_op = ROM_SETTINGS.countperop;

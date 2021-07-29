@@ -133,6 +133,69 @@ typedef m64p_error (*ptr_CoreGetRomSettings)(m64p_rom_settings *, int, int, int)
 EXPORT m64p_error CALL CoreGetRomSettings(m64p_rom_settings *, int, int, int);
 #endif
 
+/* CoreSaveOverride()
+ *
+ * This function will override where the eep save files are targetting.
+ */
+typedef m64p_error(*ptr_CoreSaveOverride)(const char *);
+#if defined(M64P_CORE_PROTOTYPES)
+EXPORT m64p_error CALL CoreSaveOverride(const char *);
+#endif
+
+/* GetHeader()
+ *
+ * This function will return a pointer to the ROM_HEADER.
+ */
+typedef void*(*ptr_GetHeader)();
+#if defined(M64P_CORE_PROTOTYPES)
+EXPORT void* CALL GetHeader();
+#endif
+
+/* GetRdRam()
+ *
+ * This function will return a pointer to the RDRAM.
+ */
+typedef void*(*ptr_GetRdRam)();
+#if defined(M64P_CORE_PROTOTYPES)
+EXPORT void* CALL GetRdRam();
+#endif
+
+/* GetRom()
+ *
+ * This function will return a pointer to the ROM.
+ */
+typedef void*(*ptr_GetRom)();
+#if defined(M64P_CORE_PROTOTYPES)
+EXPORT void* CALL GetRom();
+#endif
+
+/* GetRdRamSize()
+ *
+ * This function will return the real length of RDRAM memory.
+ */
+typedef void*(*ptr_GetRdRamSize)();
+#if defined(M64P_CORE_PROTOTYPES)
+EXPORT const size_t CALL GetRdRamSize();
+#endif
+
+/* GetRomSize()
+ *
+ * This function will return the real length of ROM memory.
+ */
+typedef void*(*ptr_GetRomSize)();
+#if defined(M64P_CORE_PROTOTYPES)
+EXPORT const size_t CALL GetRomSize();
+#endif
+
+/* RefreshDynarec()
+ *
+ * This function will refresh the dynamic recompiler needed for asm injections to work.
+ */
+typedef void*(*ptr_RefreshDynarec)();
+#if defined(M64P_CORE_PROTOTYPES)
+EXPORT void CALL RefreshDynarec();
+#endif
+
 #ifdef __cplusplus
 }
 #endif
