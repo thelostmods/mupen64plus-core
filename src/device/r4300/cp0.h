@@ -166,7 +166,7 @@ struct interrupt_handler
     void (*callback)(void*);
 };
 
-enum { CP0_INTERRUPT_HANDLERS_COUNT = 13 };
+enum { CP0_INTERRUPT_HANDLERS_COUNT = 16 };
 
 enum {
     INTR_UNSAFE_R4300 = 0x01,
@@ -201,6 +201,7 @@ struct cp0
 
     uint32_t last_addr;
     unsigned int count_per_op;
+    unsigned int count_per_op_denom_pot;
 
     struct tlb tlb;
 };
@@ -215,7 +216,7 @@ struct cp0
     offsetof(struct new_dynarec_hot_state, cp0_regs))
 #endif
 
-void init_cp0(struct cp0* cp0, unsigned int count_per_op, struct new_dynarec_hot_state* new_dynarec_hot_state, const struct interrupt_handler* interrupt_handlers);
+void init_cp0(struct cp0* cp0, unsigned int count_per_op, unsigned int count_per_op_denom_pot, struct new_dynarec_hot_state* new_dynarec_hot_state, const struct interrupt_handler* interrupt_handlers);
 void poweron_cp0(struct cp0* cp0);
 
 uint32_t* r4300_cp0_regs(struct cp0* cp0);

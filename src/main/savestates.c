@@ -86,31 +86,32 @@ static char *savestates_generate_path(savestates_type type)
     }
     else /* Use the selected savestate slot */
     {
-        char *filename;
+        char *filepath;
+        size_t size = 0;
+
         switch (type)
         {
             case savestates_type_m64p:
-                filename = formatstr("%s.st%d", ROM_SETTINGS.goodname, slot);
+                /* check if old file path exists, if it does then use that */
+                filepath = formatstr("%s%s.st%d", get_savestatepath(), ROM_SETTINGS.goodname, slot);
+                if (get_file_size(filepath, &size) != file_ok || size == 0)
+                {
+                    /* else use new path */
+                    filepath = formatstr("%s%s.st%d", get_savestatepath(), get_savestatefilename(), slot);
+                }
                 break;
             case savestates_type_pj64_zip:
-                filename = formatstr("%s.pj%d.zip", ROM_PARAMS.headername, slot);
+                filepath = formatstr("%s%s.pj%d.zip", get_savestatepath(), ROM_PARAMS.headername, slot);
                 break;
             case savestates_type_pj64_unc:
-                filename = formatstr("%s.pj%d", ROM_PARAMS.headername, slot);
+                filepath = formatstr("%s%s.pj%d", get_savestatepath(), ROM_PARAMS.headername, slot);
                 break;
             default:
-                filename = NULL;
+                filepath = NULL;
                 break;
         }
 
-        if (filename != NULL)
-        {
-            char *filepath = formatstr("%s%s", get_savestatepath(), filename);
-            free(filename);
-            return filepath;
-        }
-        else
-            return NULL;
+        return filepath;
     }
 }
 
@@ -141,6 +142,7 @@ void savestates_inc_slot(void)
 {
     if(++slot>9)
         slot = 0;
+    ConfigSetParameter(g_CoreConfig, "CurrentStateSlot", M64TYPE_INT, &slot);
     StateChanged(M64CORE_SAVESTATE_SLOT, slot);
 }
 
@@ -565,7 +567,7 @@ static int savestates_load_m64p(struct device* dev, char *filepath)
                 COPYARRAY(cam_regs, curr, uint8_t, POCKET_CAM_REGS_COUNT);
             }
 
-            if (ROM_SETTINGS.transferpak && !Controls[i].RawData) {
+            if (ROM_SETTINGS.transferpak && !Controls[i].RawData && (Controls[i].Type == CONT_TYPE_STANDARD)) {
 
                 /* init transferpak state if enabled and not controlled by input plugin */
                 dev->transferpaks[i].enabled = enabled;
@@ -675,7 +677,7 @@ static int savestates_load_m64p(struct device* dev, char *filepath)
             uint8_t rpk_state = GETDATA(curr, uint8_t);
 
             /* init rumble pak state if enabled and not controlled by the input plugin */
-            if (ROM_SETTINGS.rumble && !Controls[i].RawData) {
+            if (ROM_SETTINGS.rumble && !Controls[i].RawData && (Controls[i].Type == CONT_TYPE_STANDARD)) {
                 set_rumble_reg(&dev->rumblepaks[i], rpk_state);
             }
         }
@@ -710,7 +712,7 @@ static int savestates_load_m64p(struct device* dev, char *filepath)
                 COPYARRAY(cam_regs, curr, uint8_t, POCKET_CAM_REGS_COUNT);
             }
 
-            if (ROM_SETTINGS.transferpak && !Controls[i].RawData) {
+            if (ROM_SETTINGS.transferpak && !Controls[i].RawData && (Controls[i].Type == CONT_TYPE_STANDARD)) {
 
                 /* init transferpak state if enabled and not controlled by input plugin */
                 dev->transferpaks[i].enabled = enabled;
@@ -892,10 +894,10 @@ static int savestates_load_m64p(struct device* dev, char *filepath)
 
             dev->controllers[i].flavor->reset(&dev->controllers[i]);
 
-            if (ROM_SETTINGS.rumble) {
+            if (ROM_SETTINGS.rumble && (Controls[i].Type == CONT_TYPE_STANDARD)) {
                 poweron_rumblepak(&dev->rumblepaks[i]);
             }
-            if (ROM_SETTINGS.transferpak) {
+            if (ROM_SETTINGS.transferpak && (Controls[i].Type == CONT_TYPE_STANDARD)) {
                 poweron_transferpak(&dev->transferpaks[i]);
             }
         }
@@ -1263,10 +1265,10 @@ static int savestates_load_pj64(struct device* dev,
 
         dev->controllers[i].flavor->reset(&dev->controllers[i]);
 
-        if (ROM_SETTINGS.rumble) {
+        if (ROM_SETTINGS.rumble && (Controls[i].Type == CONT_TYPE_STANDARD)) {
             poweron_rumblepak(&dev->rumblepaks[i]);
         }
-        if (ROM_SETTINGS.transferpak) {
+        if (ROM_SETTINGS.transferpak && (Controls[i].Type == CONT_TYPE_STANDARD)) {
             poweron_transferpak(&dev->transferpaks[i]);
         }
     }

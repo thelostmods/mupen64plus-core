@@ -439,13 +439,11 @@ file_status_t netplay_read_storage(const char *filename, void *data, size_t size
     //This function syncs save games.
     //If the client is controlling player 1, it sends its save game to the server
     //All other players receive save files from the server
-    const char *short_filename = strrchr(filename, '/');
-    if (short_filename == NULL)
-        short_filename = strrchr(filename, '\\');
-    short_filename += 1;
+    const char *file_extension = strrchr(filename, '.');
+    file_extension += 1;
 
     uint32_t buffer_pos = 0;
-    char *output_data = malloc(size + strlen(short_filename) + 6);
+    char *output_data = malloc(size + strlen(file_extension) + 6);
 
     file_status_t ret;
     uint8_t request;
@@ -455,9 +453,9 @@ file_status_t netplay_read_storage(const char *filename, void *data, size_t size
         memcpy(&output_data[buffer_pos], &request, 1);
         ++buffer_pos;
 
-         //send file name
-        memcpy(&output_data[buffer_pos], short_filename, strlen(short_filename) + 1);
-        buffer_pos += strlen(short_filename) + 1;
+         //send file extension
+        memcpy(&output_data[buffer_pos], file_extension, strlen(file_extension) + 1);
+        buffer_pos += strlen(file_extension) + 1;
 
         ret = read_from_file(filename, data, size);
         if (ret == file_open_error)
@@ -475,9 +473,9 @@ file_status_t netplay_read_storage(const char *filename, void *data, size_t size
         memcpy(&output_data[buffer_pos], &request, 1);
         ++buffer_pos;
 
-        //name of the file we are requesting
-        memcpy(&output_data[buffer_pos], short_filename, strlen(short_filename) + 1);
-        buffer_pos += strlen(short_filename) + 1;
+        //extension of the file we are requesting
+        memcpy(&output_data[buffer_pos], file_extension, strlen(file_extension) + 1);
+        buffer_pos += strlen(file_extension) + 1;
 
         SDLNet_TCP_Send(l_tcpSocket, &output_data[0], buffer_pos);
         size_t recv = 0;
@@ -498,23 +496,24 @@ file_status_t netplay_read_storage(const char *filename, void *data, size_t size
     return ret;
 }
 
-void netplay_sync_settings(uint32_t *count_per_op, uint32_t *disable_extra_mem, int32_t *si_dma_duration, uint32_t *emumode, int32_t *no_compiled_jump)
+void netplay_sync_settings(uint32_t *count_per_op, uint32_t *count_per_op_denom_pot, uint32_t *disable_extra_mem, int32_t *si_dma_duration, uint32_t *emumode, int32_t *no_compiled_jump)
 {
     if (!netplay_is_init())
         return;
 
-    char output_data[21];
+    char output_data[25];
     uint8_t request;
     if (l_netplay_control[0] != -1) //player 1 is the source of truth for settings
     {
         request = TCP_SEND_SETTINGS;
         memcpy(&output_data[0], &request, 1);
         SDLNet_Write32(*count_per_op, &output_data[1]);
-        SDLNet_Write32(*disable_extra_mem, &output_data[5]);
-        SDLNet_Write32(*si_dma_duration, &output_data[9]);
-        SDLNet_Write32(*emumode, &output_data[13]);
-        SDLNet_Write32(*no_compiled_jump, &output_data[17]);
-        SDLNet_TCP_Send(l_tcpSocket, &output_data[0], 21);
+        SDLNet_Write32(*count_per_op_denom_pot, &output_data[5]);
+        SDLNet_Write32(*disable_extra_mem, &output_data[9]);
+        SDLNet_Write32(*si_dma_duration, &output_data[13]);
+        SDLNet_Write32(*emumode, &output_data[17]);
+        SDLNet_Write32(*no_compiled_jump, &output_data[21]);
+        SDLNet_TCP_Send(l_tcpSocket, &output_data[0], 25);
     }
     else
     {
@@ -522,13 +521,14 @@ void netplay_sync_settings(uint32_t *count_per_op, uint32_t *disable_extra_mem, 
         memcpy(&output_data[0], &request, 1);
         SDLNet_TCP_Send(l_tcpSocket, &output_data[0], 1);
         int32_t recv = 0;
-        while (recv < 20)
-            recv += SDLNet_TCP_Recv(l_tcpSocket, &output_data[recv], 20 - recv);
+        while (recv < 24)
+            recv += SDLNet_TCP_Recv(l_tcpSocket, &output_data[recv], 24 - recv);
         *count_per_op = SDLNet_Read32(&output_data[0]);
-        *disable_extra_mem = SDLNet_Read32(&output_data[4]);
-        *si_dma_duration = SDLNet_Read32(&output_data[8]);
-        *emumode = SDLNet_Read32(&output_data[12]);
-        *no_compiled_jump = SDLNet_Read32(&output_data[16]);
+        *count_per_op_denom_pot = SDLNet_Read32(&output_data[4]);
+        *disable_extra_mem = SDLNet_Read32(&output_data[8]);
+        *si_dma_duration = SDLNet_Read32(&output_data[12]);
+        *emumode = SDLNet_Read32(&output_data[16]);
+        *no_compiled_jump = SDLNet_Read32(&output_data[20]);
     }
 }
 
